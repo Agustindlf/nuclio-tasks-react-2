@@ -21,9 +21,7 @@ function TaskForm({ onSubmit, children }) {
       setError("Your task title cannot be empty");
     } else {
       onSubmit({
-        id: generateId(),
         title,
-        completed: false,
       });
       setTitle("");
       setError("");

@@ -4,8 +4,7 @@ import TaskForm from "../components/task-form";
 import TaskList from "../components/task-list";
 import TaskItem from "../components/task-item";
 import useNotifications from "../hooks/use-notifications";
-import { generateId } from "../utils/string";
-import { postTask } from "../utils/api";
+import api from "../utils/api";
 
 function TaskListPage() {
   const [tasks, setTasks] = useState([]);
@@ -15,7 +14,7 @@ function TaskListPage() {
   const completedTasksCount = tasks.length - pendingTasksCount;
 
   useEffect(() => {
-    fetch("http://localhost:3001/task")
+    fetch("http://localhost:8000/task")
       .then((response) => response.json())
       .then(setTasks);
   }, []);
@@ -30,7 +29,7 @@ function TaskListPage() {
 
   const createTask = async (task) => {
     try {
-      const response = await postTask(task);
+      const response = await api.postTask(task);
       if (response.status < 400 && response.status < 500) {
         setTasks([...tasks, task]);
       }
@@ -41,26 +40,22 @@ function TaskListPage() {
   };
 
   const removeTask = async (id) => {
-    const newTasks = tasks.filter((task) => task.id !== id);
-    setTasks(newTasks);
+    const response = await api.deleteTask(id);
+    alert(response.message);
+    const tasks = await api.getAllTasks()
+    setTasks(tasks);
   };
 
-  const completeTask = (id) => {
-    const newTasks = tasks.map((task) => {
-      if (task.id === id) {
-        return {
-          ...task,
-          completed: !task.completed,
-        };
-      }
-      return task;
-    });
-    setTasks(newTasks);
+  const completeTask = async (id, completed) => {
+    await api.patchTask(id, { completed: !completed });
+    const tasks = await api.getAllTasks()
+    setTasks(tasks);
   };
 
-  const clearCompleted = () => {
-    const newTasks = tasks.filter((task) => !task.completed);
-    setTasks(newTasks);
+  const clearCompleted = async () => {
+    await api.clearCompleted();
+    const tasks = await api.getAllTasks()
+    setTasks(tasks);
   };
 
   return (
@@ -70,8 +65,8 @@ function TaskListPage() {
       <TaskList>
         {tasks.map((task) => (
           <TaskItem
-            key={task.id}
-            id={task.id}
+            key={task._id}
+            id={task._id}
             title={task.title}
             completed={task.completed}
             onClick={completeTask}
